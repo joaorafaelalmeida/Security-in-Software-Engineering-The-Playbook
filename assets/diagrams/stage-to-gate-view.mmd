@@ -1,0 +1,18 @@
+flowchart TD
+    S1[Before Coding] --> G1[<b>Gate 1:</b><br/>Architecture and Threat Review]
+    S2[Pre-commit] --> G2[<b>Gate 2:</b><br/>Local Security Hygiene]
+    S3[Pull Request and CI] --> G3[<b>Gate 3:</b><br/>Shared Code Enforcement]
+    S4[Nightly or Scheduled] --> G4[<b>Gate 4:</b><br/>Depth and Runtime Validation]
+    S5[Pre-release] --> G5[<b>Gate 5:</b><br/>Risk Acceptance Decision]
+    S6[Post-release] --> G6[<b>Gate 6:</b><br/>Operational Feedback Loop]
+
+    G1 --> S2
+    G2 --> S3
+    G3 --> S4
+    G4 --> S5
+    G5 --> S6
+
+    classDef stage fill:#F7F7F7,stroke:#5A5A5A,stroke-width:1px,color:#111111;
+    classDef gate fill:#ECECEC,stroke:#3F3F3F,stroke-width:1px,color:#111111;
+    class S1,S2,S3,S4,S5,S6 stage;
+    class G1,G2,G3,G4,G5,G6 gate;

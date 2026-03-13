@@ -1,0 +1,14 @@
+flowchart TD
+    A[New Feature or Architectural Change] --> B{Processes sensitive or personal data?}
+    B -->|Yes| C[Apply LINDDUN]
+    B -->|No| D[Apply STRIDE]
+
+    C --> E{Has trust boundary changes?}
+    D --> E
+
+    E -->|Yes| F[Update DFD and Abuse Stories]
+    E -->|No| G[Reuse Existing Threat Model]
+
+    F --> H[Define Security and Privacy Requirements]
+    G --> H
+    H --> I[Implement Controls and Add Pipeline Gates]

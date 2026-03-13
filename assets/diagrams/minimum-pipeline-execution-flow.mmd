@@ -1,0 +1,11 @@
+flowchart LR
+    T[Threat Model and DFD] --> P[Pre-commit Checks]
+    P --> R[PR and CI Security Gates]
+    R --> N[Nightly DAST and Deep Scans]
+    N --> Q[Finding Triage and Ownership]
+    Q --> U[Threat Model Update]
+
+    R -->|Critical issue| X[Block Merge]
+    X --> P
+
+    Q -->|Accepted risk with rationale| V[Risk Register]
