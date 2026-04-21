@@ -18,7 +18,6 @@
 
 ## Resources
 
-- **Blueprint**: See the [DevSecOps Pipeline Blueprint](./DevSecOps-Pipeline-Blueprint.md) for a practical pipeline flow and glossary
 - **Templates**: See the [templates/](./templates) folder for examples
 - **Guidelines**: Read [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed contribution guidelines
 - **Issues**: Report problems or suggest topics via [GitHub Issues](../../issues)

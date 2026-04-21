@@ -1,0 +1,7 @@
+%%{init: {'themeVariables': {'fontSize': '18px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 50}}}%%
+flowchart TD
+    M1[<b>Collect Metrics</b><br/>MTTR, False Positive Rate,<br/>Coverage, Open Critical Findings] --> M2[Analyze<br/>Trends]
+    M2 --> M3[Prioritize<br/>Improvements]
+    M3 --> M4[Adjust Rules,<br/>Gates, and Workflows]
+    M4 --> M5[Re-measure<br/>Outcomes]
+    M5 --> M1

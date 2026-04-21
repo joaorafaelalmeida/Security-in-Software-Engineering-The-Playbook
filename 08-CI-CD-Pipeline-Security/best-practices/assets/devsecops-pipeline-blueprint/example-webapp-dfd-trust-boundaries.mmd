@@ -1,36 +1,37 @@
-flowchart LR
-    U[External User]
-    B[Web Browser]
+%%{init: {'themeVariables': {'fontSize': '18px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 55}}}%%
+flowchart TD
+    U[External User] -->|F1| B[Web Browser]
 
     subgraph TB1[Public Internet]
+        direction TB
         WAF[WAF or Reverse Proxy]
     end
 
     subgraph TB2[Application Zone]
-        WEB[Web Frontend]
-        API[Backend API]
+        direction LR
+        WEB[Web Frontend] -->|F4| API[Backend API]
         AUTH[Identity Provider]
     end
 
     subgraph TB3[Data Zone]
+        direction LR
         DB[(Application Database)]
         OBJ[(Object Storage)]
         LOG[Security Logging Pipeline]
     end
 
     subgraph TB4[External Services]
+        direction TB
         PAY[Payment Gateway]
     end
 
-    U -- F1 --> B
-    B -- F2 --> WAF
-    WAF -- F3 --> WEB
-    WEB -- F4 --> API
-    API -- F5 --> AUTH
-    API -- F6 --> DB
-    API -- F7 --> OBJ
-    API -- F8 --> PAY
-    API -- F9 --> LOG
+    B -->|F2| WAF
+    WAF -->|F3| WEB
+    API -->|F5| AUTH
+    API -->|F6| DB
+    API -->|F7| OBJ
+    API -->|F8| PAY
+    API -->|F9| LOG
 
     classDef proc fill:#EDEDED,stroke:#3F3F3F,stroke-width:1px,color:#111111;
     classDef data fill:#F3F3F3,stroke:#4A4A4A,stroke-width:1px,color:#111111;
