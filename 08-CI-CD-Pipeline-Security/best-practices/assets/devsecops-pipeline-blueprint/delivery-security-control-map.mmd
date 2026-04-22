@@ -1,0 +1,18 @@
+%%{init: {'themeVariables': {'fontSize': '18px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 50}}}%%
+flowchart TD
+    A1[<b>Threat Modeling</b><br/>STRIDE and LINDDUN]:::security --> A[Design and<br/>Architecture]:::stage
+    A --> B[Developer<br/>Workstation]:::stage
+    B1[<b>Pre-commit Checks</b><br/>Secret Scanning and<br/>Lightweight SAST]:::security --> B
+    B --> C[Pull Request<br/>and CI]:::stage
+    C1[<b>Shared Gates</b><br/>SAST, SCA, IaC]:::security --> C
+    C --> D[Scheduled<br/>Verification]:::stage
+    D1[<b>Scheduled Depth</b><br/>DAST and Deeper<br/>SAST Profiles]:::security --> D
+    D --> E[Release<br/>Readiness]:::stage
+    E1[<b>Pre-release Review</b><br/>Open Findings and<br/>Release Readiness]:::security --> E
+    E --> F[Production<br/>Monitoring]:::stage
+    F1[<b>Detection and Response</b><br/>Telemetry and Patch Cycle]:::security --> F
+    F --> G[Model Updates and<br/>Next Planning Cycle]:::stage
+    G --> A
+
+    classDef stage fill:#EDE9FF,stroke:#8B80F9,stroke-width:1px,color:#111111;
+    classDef security fill:#F2F2F2,stroke:#4A4A4A,stroke-width:1px,color:#111111;

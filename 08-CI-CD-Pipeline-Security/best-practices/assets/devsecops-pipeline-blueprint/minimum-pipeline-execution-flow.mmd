@@ -1,0 +1,12 @@
+%%{init: {'themeVariables': {'fontSize': '18px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 50}}}%%
+flowchart TD
+    T[Threat Model<br/>and DFD] --> P[Pre-commit<br/>Checks]
+    P --> R[PR and CI<br/>Security Gates]
+    R --> N[Nightly DAST and<br/>Deep Scans]
+    N --> Q[Finding Triage and<br/>Ownership]
+    Q --> U[Threat Model<br/>Update]
+
+    R -->|Critical issue| X[Block Merge and<br/>Fix Findings]
+    X --> P
+
+    Q -->|Accepted risk with rationale| V[Risk Register]
