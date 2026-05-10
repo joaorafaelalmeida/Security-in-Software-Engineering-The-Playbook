@@ -119,6 +119,10 @@ def get_user(user_id: str):
     return db.query(user_id)
 ```
 
+In the bad example, the code silently trims the input to 36 characters and passes it to the database anyway. An attacker sending a malformed or malicious ID would not be stopped — the code just quietly adjusts the input and continues. In the good example, the code checks that the value looks exactly like a UUID before doing anything with it. If it does not match, it raises an error immediately and the database is never touched.
+
+
+
 #### Step 3: Sanitize for the Output Context
 
 Even validated input can be dangerous when placed in a context it was not designed for. A username that is perfectly valid for storage can still contain characters that break an HTML template or a shell command.
@@ -147,6 +151,8 @@ template = env.from_string("<p>Welcome, {{ username }}!</p>")
 html = template.render(username=username)
 ```
 
+In the bad example, if `username` contains something like `<script>alert(1)</script>`, that script tag lands directly in the HTML and executes in the user's browser. In the good example, Jinja2 with `autoescape=True` converts those characters into harmless HTML entities, so the browser displays them as text instead of running them.
+
 **SQL — parameterized queries:**
 
 ```python
@@ -157,6 +163,8 @@ cursor.execute(query)
 # Good — parameterized
 cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
 ```
+
+In the bad example, an attacker can send a username like `' OR '1'='1` and break out of the intended query, potentially returning every row in the table. In the good example, the value is passed separately from the query and the database treats it purely as data, never as SQL — no matter what it contains.
 
 **File path — prevent path traversal:**
 
@@ -174,6 +182,8 @@ def save_file(filename: str, content: bytes):
         f.write(content)
 ```
 
+Without the check, a filename like `../../etc/passwd` would resolve to a path outside the upload directory, letting an attacker read or overwrite sensitive system files. `os.path.realpath` resolves all `..` sequences to the true absolute path, and the `startswith` check then ensures the result is still inside the allowed directory before the file is opened.
+
 **Shell commands — avoid shell=True:**
 
 ```python
@@ -185,6 +195,8 @@ subprocess.run(f"convert {filename} output.png", shell=True)
 # Good — pass arguments as a list
 subprocess.run(["convert", filename, "output.png"])
 ```
+
+With `shell=True`, the entire string is passed to the shell interpreter. An attacker who controls `filename` can inject additional commands, for example `photo.jpg; rm -rf /`. Passing arguments as a list bypasses the shell entirely — each element is treated as a literal argument, so there is no way to inject extra commands.
 
 ## Common Pitfalls
 
