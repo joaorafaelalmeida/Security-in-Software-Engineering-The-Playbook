@@ -11,7 +11,7 @@ Every piece of data that enters a system from outside HTTP parameters, headers, 
 - traverse the filesystem beyond the intended directory (path traversal);
 - trigger unexpected application behaviour through oversized or malformed values.
 
-This is a real concern, especially because it has affected real companies. In 2017, the Equifax breach (one of the largest data exposures in history, affecting 147 million people) was traced back to an injection flaw reachable through a web input that was never properly validated. OWASP consistently recognizes input-related failures as critical vulnerabilities: injection ranks as A03:2021 in the current OWASP Top 10, while broken access control (which path traversal falls under) holds the top spot at A01:2021.
+This is a real concern, especially because it has affected real companies. In 2017, the Equifax breach exposed personal information of about 147 million people. The attack vector was an unpatched Apache Struts vulnerability, CVE-2017-5638, in the online dispute portal. That vulnerability allowed remote code execution through crafted HTTP headers. OWASP consistently recognizes input-related failures as critical vulnerabilities: injection ranks as A03:2021 in the current OWASP Top 10, while broken access control (which path traversal falls under) holds the top spot at A01:2021.
 
 The underlying cause is almost always the same: the application blindly trusted what it received instead of checking whether it was safe to receive and use.
 
@@ -23,8 +23,7 @@ Input handling has two distinct responsibilities:
 
 - **Validation** — decide whether the input is acceptable. If it is not, reject it early and return a clear error.
 - **Sanitization** — transform acceptable input into a safe form before using it in a sensitive context (query, template, file path, shell command).
-
-These are complementary, not interchangeable. Validation alone does not protect output contexts; sanitization alone can mask bugs that validation would surface immediately.
+These are complementary, not interchangeable. Validation alone does not protect every output context, and transforming input too early can mask bugs that validation would surface immediately.
 
 ### Core Principle: Trust Nothing from Outside the Process
 
@@ -47,12 +46,17 @@ Use an allowlist (define what is permitted) rather than a denylist (block known 
 Pydantic lets you declare the shape and constraints of your input as a class. When a request comes in, you pass it to that class and it either returns a validated object or raises a `ValidationError`, with no manual checking needed.
 
 ```python
-from pydantic import BaseModel, Field, constr
+from typing import Annotated
+
+from pydantic import BaseModel, EmailStr, Field, StringConstraints
 
 class RegistrationRequest(BaseModel):
-    username: constr(min_length=3, max_length=32, pattern=r'^[a-zA-Z0-9_-]+$')
-    age: int = Field(ge=0, le=150)
-    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+    username: Annotated[
+        str,
+        StringConstraints(min_length=3, max_length=32, pattern=r"^[a-zA-Z0-9_-]+$")
+    ]
+    age: Annotated[int, Field(ge=0, le=150, strict=True)]
+    email: EmailStr
 ```
 
 **Java Spring Boot — DTO with `@Valid` in the controller:**
@@ -127,12 +131,12 @@ In the bad example, the code silently trims the input to 36 characters and passe
 
 Even validated input can be dangerous when placed in a context it was not designed for. A username that is perfectly valid for storage can still contain characters that break an HTML template or a shell command.
 
-Apply context-specific encoding or escaping as late as possible, at the point of use, not at the point of entry.
+Apply context-specific output encoding, parameterization, or escaping as late as possible, at the point of use, not at the point of entry.
 
-| Output context | Required transformation |
+| Output context | Required protection |
 |---|---|
-| HTML body | HTML-encode (`&`, `<`, `>`, `"`, `'`) |
-| HTML attribute | HTML-encode, quote the attribute |
+| HTML body | Context-specific output encoding (`&`, `<`, `>`, `"`, `'`) |
+| HTML attribute | Context-specific output encoding, quote the attribute |
 | SQL query | Use parameterized queries — never concatenate |
 | Shell command | Use structured APIs (subprocess with list args, not shell=True) |
 | File path | Resolve and verify the canonical path stays within the allowed directory |
@@ -171,18 +175,18 @@ In the bad example, an attacker can send a username like `' OR '1'='1` and break
 ```python
 import os
 
-UPLOAD_DIR = "/var/app/uploads"
+UPLOAD_DIR = os.path.realpath("/var/app/uploads")
 
 def save_file(filename: str, content: bytes):
     # Resolve the full path and verify it stays inside UPLOAD_DIR
     target = os.path.realpath(os.path.join(UPLOAD_DIR, filename))
-    if not target.startswith(UPLOAD_DIR + os.sep):
+    if os.path.commonpath([UPLOAD_DIR, target]) != UPLOAD_DIR:
         raise ValueError("Path traversal attempt detected")
     with open(target, "wb") as f:
         f.write(content)
 ```
 
-Without the check, a filename like `../../etc/passwd` would resolve to a path outside the upload directory, letting an attacker read or overwrite sensitive system files. `os.path.realpath` resolves all `..` sequences to the true absolute path, and the `startswith` check then ensures the result is still inside the allowed directory before the file is opened.
+Without the check, a filename like `../../etc/passwd` would resolve to a path outside the upload directory, letting an attacker read or overwrite sensitive system files. `os.path.realpath` resolves all `..` sequences and symbolic links to the true absolute path, and `os.path.commonpath` then ensures the result is still inside the allowed directory before the file is opened. File uploads should also use server-generated filenames, size limits, content validation, and malware scanning where feasible.
 
 **Shell commands — avoid shell=True:**
 
@@ -192,11 +196,11 @@ import subprocess
 # Bad — shell=True with user input is command injection
 subprocess.run(f"convert {filename} output.png", shell=True)
 
-# Good — pass arguments as a list
-subprocess.run(["convert", filename, "output.png"])
+# Good — pass arguments as a list and use -- where the command supports it
+subprocess.run(["convert", "--", filename, "output.png"], check=True)
 ```
 
-With `shell=True`, the entire string is passed to the shell interpreter. An attacker who controls `filename` can inject additional commands, for example `photo.jpg; rm -rf /`. Passing arguments as a list bypasses the shell entirely — each element is treated as a literal argument, so there is no way to inject extra commands.
+With `shell=True`, the entire string is passed to the shell interpreter. An attacker who controls `filename` can inject additional commands, for example `photo.jpg; rm -rf /`. Passing arguments as a list bypasses the shell entirely, so each element is treated as one argument. However, a user-controlled filename that starts with `-` may still be interpreted as a command option. Where the command supports it, add `--` before the filename to mark the end of options.
 
 ## Common Pitfalls
 
@@ -204,7 +208,7 @@ With `shell=True`, the entire string is passed to the shell interpreter. An atta
 
 2. **Using denylists instead of allowlists.** Blocking known-bad patterns (e.g., `<script>`) is fragile, as there are always encoding tricks and edge cases that bypass them. Define what is allowed instead.
 
-3. **Validating at entry but not sanitizing at use.** A value stored safely in the database can still cause XSS if rendered without encoding, or SQL injection if interpolated into a dynamic query later.
+3. **Validating at entry but not protecting the point of use.** A value stored safely in the database can still cause XSS if rendered without context-specific output encoding, or SQL injection if interpolated into a dynamic query later.
 
 4. **Over-sanitizing at entry.** Stripping characters on the way in (e.g., removing `<` from all input) corrupts legitimate data and gives a false sense of security. Encode at the point of use instead.
 
@@ -214,8 +218,8 @@ With `shell=True`, the entire string is passed to the shell interpreter. An atta
 
 ## When to Apply
 
-- **Always:** Any value that originates outside the current process must be validated before use and sanitized before being placed in a sensitive context.
-- **Always:** File uploads. Validate the extension, MIME type, and file size, and scan the content if feasible.
+- **Always:** Any value that originates outside the current process must be validated before use and protected appropriately before being placed in a sensitive context.
+- **Always:** File uploads. Use server-generated filenames, size limits, content validation, and malware scanning where feasible.
 - **Recommended:** Validate inter-service messages even on internal networks. Assume breach.
 - **Consider:** Re-validating data read from the database before placing it in a new output context (e.g., user-supplied content rendered in a different service).
 
@@ -237,7 +241,7 @@ def test_rejects_oversized_username():
 
 # Test that SQL injection payloads do not alter query behaviour
 def test_sql_injection_payload_returns_no_results(db):
-    result = get_user("' OR '1'='1")
+    result = get_user_by_username("' OR '1'='1")
     assert result is None
 ```
 
