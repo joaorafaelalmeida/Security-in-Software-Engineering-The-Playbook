@@ -1,0 +1,70 @@
+graph TB
+    subgraph "Clients"
+        APP["Applications<br/>(Python, Go, Node.js)"]
+        K8S["Kubernetes<br/>Pods"]
+        CICD["CI/CD<br/>Pipelines"]
+        HUMAN["Human Users"]
+    end
+
+    subgraph "Authentication Layer"
+        K8SAUTH["Kubernetes Auth<br/>(ServiceAccount tokens)"]
+        APPROLE["AppRole<br/>(Machine auth)"]
+        JWT["JWT/OIDC<br/>(Human IdP)"]
+        AWSIAM["AWS IAM<br/>(Cloud workloads)"]
+    end
+
+    subgraph "Vault Core"
+        VAULTCORE["Vault API Server<br/>(gRPC + HTTP/REST)"]
+        POLICY["Policy Engine<br/>(RBAC, ACLs)"]
+        LEASE["Lease Manager<br/>(TTL, Renewal, Revocation)"]
+    end
+
+    subgraph "Secret Engines"
+        KV["KV v2<br/>(Key-Value Storage)"]
+        DB["Database<br/>(Dynamic Credentials)"]
+        PKI["PKI<br/>(Certificates)"]
+        AWS["AWS Engine<br/>(IAM, STS)"]
+        GCP["GCP Engine<br/>(Service Accounts)"]
+    end
+
+    subgraph "Storage Backend"
+        STORAGE["Persistent Storage<br/>(Consul, S3, PostgreSQL, etcd, Raft)"]
+    end
+
+    subgraph "Audit & Logging"
+        AUDIT["Audit Backends<br/>(File, Syslog, Splunk, CloudWatch)"]
+    end
+
+    APP -->|authenticate| K8SAUTH
+    K8S -->|authenticate| K8SAUTH
+    CICD -->|authenticate| APPROLE
+    HUMAN -->|authenticate| JWT
+
+    K8SAUTH -->|grant token| VAULTCORE
+    APPROLE -->|grant token| VAULTCORE
+    JWT -->|grant token| VAULTCORE
+    AWSIAM -->|grant token| VAULTCORE
+
+    VAULTCORE -->|check permissions| POLICY
+    VAULTCORE -->|request secret| KV
+    VAULTCORE -->|generate credential| DB
+    VAULTCORE -->|issue certificate| PKI
+    VAULTCORE -->|assume role| AWS
+    VAULTCORE -->|create key| GCP
+
+    VAULTCORE -->|track lease| LEASE
+    LEASE -->|revoke on expiry| DB
+
+    KV -->|read/write| STORAGE
+    DB -->|persist state| STORAGE
+    PKI -->|persist state| STORAGE
+
+    VAULTCORE -->|log access| AUDIT
+    POLICY -->|log decisions| AUDIT
+    LEASE -->|log operations| AUDIT
+
+    style VAULTCORE fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style POLICY fill:#2196F3,stroke:#1565C0,color:#fff
+    style LEASE fill:#FF9800,stroke:#E65100,color:#fff
+    style STORAGE fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style AUDIT fill:#F44336,stroke:#C62828,color:#fff
