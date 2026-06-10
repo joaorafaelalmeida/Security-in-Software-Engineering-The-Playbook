@@ -1,0 +1,26 @@
+flowchart TB
+    subgraph Pattern["Syntactic / Pattern matching"]
+        P1[AST + regex-like rules]
+        P2[Fast, low setup]
+        P3[Misses data flow across functions]
+    end
+    subgraph Taint["Taint / Data-flow analysis"]
+        T1[Source to sink tracking]
+        T2[Catches injection across files]
+        T3[Slower, needs build context]
+    end
+    subgraph Semantic["Semantic / Symbolic"]
+        S1[Path-sensitive reasoning]
+        S2[Fewer false positives on logic bugs]
+        S3[Heaviest compute]
+    end
+
+    Pattern -->|"depth increases"| Taint --> Semantic
+    Pattern -.->|"speed decreases"| Semantic
+
+    classDef p fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef t fill:#fff3e0,stroke:#ef6c00,color:#e65100;
+    classDef s fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
+    class P1,P2,P3 p;
+    class T1,T2,T3 t;
+    class S1,S2,S3 s;
