@@ -1,0 +1,18 @@
+%%{init: {'themeVariables': {'fontSize': '18px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 50}}}%%
+flowchart TD
+    IN[User-supplied URL]:::stage --> IND{Can you avoid a<br/>user URL entirely?}:::q
+    IND -->|yes| MAP[<b>Map opaque id to a<br/>server-side URL</b>]:::ctrl
+    IND -->|no| SCH{Scheme + host + port<br/>on the allow-list?}:::q
+    SCH -->|no| BLOCK[<b>Reject</b>]:::deny
+    SCH -->|yes| RES[<b>Resolve hostname</b>]:::ctrl
+    RES --> IP{Resolved IP loopback /<br/>link-local / private?}:::q
+    IP -->|yes| BLOCK
+    IP -->|no| FETCH[<b>Fetch with redirects DISABLED</b><br/>re-check on each hop]:::ctrl
+    MAP --> FETCH
+    FETCH --> EGRESS[<b>Network egress filtering</b><br/>defence in depth - Ch 07]:::net
+
+    classDef stage fill:#EDE9FF,stroke:#8B80F9,stroke-width:1px,color:#111111;
+    classDef q fill:#FFF4D6,stroke:#C9A227,stroke-width:1px,color:#111111;
+    classDef ctrl fill:#E6F0FF,stroke:#2F6FBF,stroke-width:1px,color:#111111;
+    classDef deny fill:#FFE0E0,stroke:#C0392B,stroke-width:1px,color:#111111;
+    classDef net fill:#F2F2F2,stroke:#4A4A4A,stroke-width:1px,color:#111111;

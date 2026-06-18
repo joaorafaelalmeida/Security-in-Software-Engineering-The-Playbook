@@ -1,0 +1,17 @@
+%%{init: {'themeVariables': {'fontSize': '18px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 50}}}%%
+flowchart TD
+    REQ[Incoming request]:::stage --> AUTHN{Authenticated?}:::q
+    AUTHN -->|no| DENY[<b>Deny - 401</b>]:::deny
+    AUTHN -->|yes| SUBJ[<b>Derive subject from session/token</b><br/>never from client id]:::ctrl
+    SUBJ --> OBJ{Owns / may access<br/>the target object?}:::q
+    OBJ -->|no| DENY2[<b>Deny - 403</b>]:::deny
+    OBJ -->|yes| PROP[<b>Bind body to DTO allow-list</b><br/>drop privileged properties]:::ctrl
+    PROP --> VAL[<b>Recompute trusted values</b><br/>price, discount, role server-side]:::ctrl
+    VAL --> SER[<b>Serialise via output schema</b><br/>no internal fields leaked]:::ctrl
+    SER --> OK[<b>Allow</b><br/>perform action]:::ok
+
+    classDef stage fill:#EDE9FF,stroke:#8B80F9,stroke-width:1px,color:#111111;
+    classDef q fill:#FFF4D6,stroke:#C9A227,stroke-width:1px,color:#111111;
+    classDef ctrl fill:#E6F0FF,stroke:#2F6FBF,stroke-width:1px,color:#111111;
+    classDef deny fill:#FFE0E0,stroke:#C0392B,stroke-width:1px,color:#111111;
+    classDef ok fill:#E2F0D9,stroke:#2E7D32,stroke-width:1px,color:#111111;
