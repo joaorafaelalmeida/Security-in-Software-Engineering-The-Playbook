@@ -1,0 +1,36 @@
+flowchart TB
+    manifest["Manifest submitted"]
+    api["Kubernetes API Server"]
+    pss{"Pod Security<br/>Standards"}
+    policy{"Policy admission<br/>Kyverno / Gatekeeper"}
+    image{"Image trust<br/>digest + signature"}
+    reject["Reject request"]
+    scheduler["Scheduler"]
+    node["Node runtime"]
+    controls["Runtime controls<br/>seccomp, capabilities, MAC, resource limits"]
+    access["Runtime access limits<br/>RBAC and NetworkPolicy"]
+    pod["Admitted workload"]
+
+    manifest --> api --> pss
+    pss -- fail --> reject
+    pss -- pass --> policy
+    policy -- fail --> reject
+    policy -- pass --> image
+    image -- fail --> reject
+    image -- pass --> scheduler --> node
+    node --> controls
+    node --> access
+    controls --> pod
+    access --> pod
+
+    classDef request fill:#e8f0fe,stroke:#2f3a4a,color:#1f2933
+    classDef gate fill:#fff4e5,stroke:#2f3a4a,color:#1f2933
+    classDef rejectClass fill:#fce8e6,stroke:#2f3a4a,color:#1f2933
+    classDef runtimeClass fill:#e0f2f1,stroke:#2f3a4a,color:#1f2933
+    classDef pass fill:#e6f4ea,stroke:#2f3a4a,color:#1f2933
+
+    class manifest,api,scheduler request
+    class pss,policy,image gate
+    class reject rejectClass
+    class node,controls,access runtimeClass
+    class pod pass

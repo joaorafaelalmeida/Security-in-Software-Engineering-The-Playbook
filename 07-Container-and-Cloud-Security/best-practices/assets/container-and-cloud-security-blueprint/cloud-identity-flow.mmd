@@ -1,0 +1,20 @@
+flowchart TB
+    pod["Workload<br/>Kubernetes service account"]
+    federation["Workload identity<br/>IRSA / GCP WI / Azure MI"]
+    role["Cloud IAM role<br/>least privilege"]
+    conditions["Conditions<br/>resource scope, audience, TTL"]
+    service["Cloud resource<br/>bucket, KMS, database"]
+    audit["Access review<br/>unused permissions"]
+
+    pod --> federation --> role --> conditions --> service --> audit
+    audit -. remove excess .-> role
+
+    classDef workload fill:#e6f4ea,stroke:#2f3a4a,color:#1f2933
+    classDef identity fill:#e8f0fe,stroke:#2f3a4a,color:#1f2933
+    classDef resource fill:#fff4e5,stroke:#2f3a4a,color:#1f2933
+    classDef auditClass fill:#fce8e6,stroke:#2f3a4a,color:#1f2933
+
+    class pod workload
+    class federation,role,conditions identity
+    class service resource
+    class audit auditClass

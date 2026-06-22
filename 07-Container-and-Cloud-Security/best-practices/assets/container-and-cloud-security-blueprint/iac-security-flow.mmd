@@ -1,0 +1,20 @@
+flowchart TB
+    pr["Pull request"]
+    scan["IaC scan<br/>Checkov / Trivy / KICS"]
+    policy["Policy as code<br/>OPA / Conftest"]
+    plan["terraform plan<br/>or helm diff"]
+    apply["controlled apply"]
+    drift["drift and CSPM<br/>post-deploy checks"]
+
+    pr --> scan --> policy --> plan --> apply --> drift
+    drift -. fix in code .-> pr
+
+    classDef code fill:#e6f4ea,stroke:#2f3a4a,color:#1f2933
+    classDef gate fill:#e8f0fe,stroke:#2f3a4a,color:#1f2933
+    classDef deploy fill:#fff4e5,stroke:#2f3a4a,color:#1f2933
+    classDef monitor fill:#fce8e6,stroke:#2f3a4a,color:#1f2933
+
+    class pr code
+    class scan,policy,plan gate
+    class apply deploy
+    class drift monitor
