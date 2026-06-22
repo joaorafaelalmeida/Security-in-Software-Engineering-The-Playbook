@@ -1,0 +1,18 @@
+flowchart LR
+    A[IDE / Author time]:::ide --> B[Pre-commit hook]:::local
+    B --> C[Pull request / CI gate]:::ci
+    C --> D[Scheduled deep scan]:::sched
+    D --> E[Pre-release review]:::rel
+
+    A -.->|"fast, in-editor rules"| A1[Inline findings]:::note
+    B -.->|"high-confidence only"| B1[Block obvious bugs]:::note
+    C -.->|"team ruleset + baseline"| C1[Merge gate on new risk]:::note
+    D -.->|"slow / whole-repo profiles"| D1[Deep taint + cross-file]:::note
+    E -.->|"triage open findings"| E1[Risk sign-off]:::note
+
+    classDef ide fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
+    classDef local fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef ci fill:#fff3e0,stroke:#ef6c00,color:#e65100;
+    classDef sched fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
+    classDef rel fill:#fce4ec,stroke:#c2185b,color:#880e4f;
+    classDef note fill:#fafafa,stroke:#bdbdbd,color:#424242,font-size:11px;

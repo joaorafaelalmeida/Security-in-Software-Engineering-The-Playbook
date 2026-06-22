@@ -1,0 +1,13 @@
+flowchart TB
+    A[Raw engine findings]:::a --> B[De-duplicate<br/>same rule + location]:::b
+    B --> C[Apply baseline<br/>ignore pre-existing]:::c
+    C --> D[Tune / disable<br/>low-signal rules]:::d
+    D --> E[Severity + reachability filter]:::e
+    E --> F[Actionable findings<br/>shown to developer]:::f
+
+    classDef a fill:#ffebee,stroke:#c62828,color:#b71c1c;
+    classDef b fill:#fff3e0,stroke:#ef6c00,color:#e65100;
+    classDef c fill:#fff8e1,stroke:#f9a825,color:#f57f17;
+    classDef d fill:#f1f8e9,stroke:#689f38,color:#33691e;
+    classDef e fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef f fill:#e0f2f1,stroke:#00897b,color:#004d40;

@@ -1,0 +1,20 @@
+flowchart TD
+    F[New SAST finding]:::start --> Q1{Reachable &<br/>exploitable?}
+    Q1 -->|No| FP[Mark false positive<br/>+ document reason]:::fp
+    Q1 -->|Yes| Q2{Severity vs<br/>policy threshold}
+    Q2 -->|Below threshold| TR[Track as tech debt<br/>with owner + date]:::track
+    Q2 -->|At / above| Q3{Fix now feasible?}
+    Q3 -->|Yes| FIX[Fix + add regression test]:::fix
+    Q3 -->|No| RA[Accept risk explicitly<br/>+ compensating control]:::risk
+    FP --> BL[Update baseline / suppression<br/>with traceable justification]:::base
+    FIX --> CL[Close + verify on re-scan]:::done
+    RA --> CL
+    TR --> CL
+
+    classDef start fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
+    classDef fp fill:#eceff1,stroke:#607d8b,color:#263238;
+    classDef track fill:#fff8e1,stroke:#f9a825,color:#f57f17;
+    classDef fix fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef risk fill:#fce4ec,stroke:#c2185b,color:#880e4f;
+    classDef base fill:#ede7f6,stroke:#5e35b1,color:#311b92;
+    classDef done fill:#e0f2f1,stroke:#00897b,color:#004d40;
