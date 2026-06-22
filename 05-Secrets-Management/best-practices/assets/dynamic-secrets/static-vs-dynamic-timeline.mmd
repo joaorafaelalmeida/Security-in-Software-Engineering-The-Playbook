@@ -1,0 +1,26 @@
+timeline
+    title Static vs Dynamic Credentials: Exposure Window Comparison
+
+    section STATIC CREDENTIALS (Vulnerable)
+        Credential Issued : Credential generated once, stored in vault/env/config
+        Time: 0 days
+        Day 1-180: Credential in use by application
+        Credential Leaked: Day 200 - Attacker gains unauthorized access
+        Detection: Day 200 - Credential leak discovered (avg 200 days to detect)
+        Incident: Days 200-210 - Attacker has full access during incident response
+        Rotation: Day 210+ - Manual rotation across all instances (hours to days of work)
+        Access Window: 200+ days of unrestricted attacker access
+
+    section DYNAMIC CREDENTIALS (Secure)
+        Credential Issued: Mon - Unique credential generated on-demand, TTL 1 hour
+        Credential Used: Mon - Application authenticates to resource
+        Credential Leaked: Mon 12:30pm - Attacker obtains the credential
+        Credential Expires: Mon 1:00pm - Vault auto-revokes credential from database/IAM
+        Attacker Access Revoked: Mon 1:00pm - Stolen credential becomes invalid instantly
+        Detection & Response: Mon 1:15pm - Team discovers leak, reviews audit logs
+        Access Window: 30 minutes maximum, then self-healing via auto-revocation
+
+    section COMPARISON
+        Static Risk: ⚠️ 200+ day exposure window | Manual rotation | Permanent access until remediation
+        Dynamic Benefit: ✅ ~1 hour exposure window | Auto-rotation | Self-healing via TTL expiry
+        Blast Radius Reduction: 99.9% reduction in exposure time (200 days → 1 hour)

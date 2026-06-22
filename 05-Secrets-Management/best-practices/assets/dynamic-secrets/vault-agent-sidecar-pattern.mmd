@@ -1,0 +1,41 @@
+graph TB
+    subgraph "Pod Startup"
+        AGENT["Vault Agent Sidecar"]
+        AUTH["K8s ServiceAccount Token"]
+    end
+
+    subgraph "Authentication & Credential Issuance"
+        VA["Agent authenticates to Vault"]
+        VAULT["Vault creates ephemeral DB user"]
+        RENDER["Agent renders /app/secrets/db.json"]
+    end
+
+    subgraph "Application Runtime"
+        APP["Application<br/>(reads db.json)"]
+        DB["Execute queries using<br/>ephemeral credentials"]
+    end
+
+    subgraph "Lifecycle Management"
+        RENEW["Agent: renew before TTL expires"]
+        REVOKE["Vault: auto-revoke on expiry"]
+    end
+
+    AGENT -->|read| AUTH
+    AUTH -->|authenticate| VA
+    VA -->|request cred| VAULT
+    VAULT -->|return username, password, TTL| RENDER
+
+    RENDER -->|inject into shared volume| APP
+    APP -->|connect| DB
+
+    DB -->|30 min later| RENEW
+    RENEW -->|request new credential| VAULT
+    VAULT -->|issue new cred| APP
+
+    APP -->|60 min after first issue| REVOKE
+    REVOKE -->|DROP database user| DB
+
+    style AGENT fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style VAULT fill:#2196F3,stroke:#1565C0,color:#fff
+    style APP fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style REVOKE fill:#FF9800,stroke:#E65100,color:#fff
