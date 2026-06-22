@@ -1,0 +1,20 @@
+%%{init: {'themeVariables': {'fontSize': '18px'}, 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 50}}}%%
+flowchart TD
+    S{State-changing or<br/>object-scoped request?}:::q --> O{References an<br/>object by id?}:::q
+    O -->|yes| OBJ[<b>Object level - BOLA/IDOR</b><br/>Replay as another user;<br/>change id you don't own]:::test
+    O -->|no| PR{Body carries fields<br/>beyond the documented set?}:::q
+    PR -->|yes| PROP[<b>Property level - BOPLA</b><br/>Send privileged/undocumented<br/>property e.g. percentage=100]:::test
+    PR -->|no| BL{Carries a value the<br/>server should own?}:::q
+    BL -->|yes| LOGIC[<b>Business logic - API6</b><br/>Tamper price/quantity;<br/>skip or replay a step]:::test
+    BL -->|no| NEXT[Move to next request]:::done
+
+    OBJ --> CHK{Access denied for<br/>the other principal?}:::q
+    PROP --> CHK
+    LOGIC --> CHK
+    CHK -->|no| FIND[<b>FINDING</b><br/>demonstrate impact]:::find
+    CHK -->|yes| NEXT
+
+    classDef q fill:#EDE9FF,stroke:#8B80F9,stroke-width:1px,color:#111111;
+    classDef test fill:#FFF4D6,stroke:#C9A227,stroke-width:1px,color:#111111;
+    classDef find fill:#FFE0E0,stroke:#C0392B,stroke-width:1px,color:#111111;
+    classDef done fill:#E2F0D9,stroke:#2E7D32,stroke-width:1px,color:#111111;
